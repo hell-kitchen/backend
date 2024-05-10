@@ -2,8 +2,11 @@ package http
 
 import (
 	"context"
+	"github.com/hell-kitchen/backend/internal/contoller"
 	"github.com/labstack/echo/v4"
 )
+
+var _ contoller.Controller = (*Controller)(nil)
 
 type Controller struct {
 	server *echo.Echo
