@@ -24,6 +24,8 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	go.uber.org/dig v1.17.1 // indirect
+	go.uber.org/fx v1.21.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect

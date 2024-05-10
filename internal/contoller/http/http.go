@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
+	"time"
 )
 
 var _ contoller.Controller = (*Controller)(nil)
@@ -17,14 +18,14 @@ var _ contoller.Controller = (*Controller)(nil)
 type Controller struct {
 	server *echo.Echo
 	log    *zap.Logger
-	cfg    *config.Controller
+	cfg    *config.Config
 	token  token.ProviderI
 	repo   repository.Interface
 }
 
 func New(
 	log *zap.Logger,
-	cfg *config.Controller,
+	cfg *config.Config,
 	tokenProvider token.ProviderI,
 	repo repository.Interface,
 ) (*Controller, error) {
@@ -88,9 +89,19 @@ func (ctrl *Controller) configure() {
 	ctrl.configureRoutes()
 }
 
-func (ctrl *Controller) OnStart(_ context.Context) error {
-	ctrl.log.Info("starting HTTP server", zap.String("bind-address", ctrl.cfg.GetBindAddress()))
-	return ctrl.server.Start(ctrl.cfg.GetBindAddress())
+func (ctrl *Controller) OnStart(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	go func() {
+		ctrl.log.Info("starting HTTP server", zap.String("bind-address", ctrl.cfg.Controller.GetBindAddress()))
+		err := ctrl.server.Start(ctrl.cfg.Controller.GetBindAddress())
+		if err != nil {
+			cancel()
+		}
+	}()
+	time.Sleep(300 * time.Millisecond)
+
+	return ctx.Err()
+
 }
 
 func (ctrl *Controller) OnStop(ctx context.Context) error {

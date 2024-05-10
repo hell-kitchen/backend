@@ -24,8 +24,8 @@ type CustomClaims struct {
 	IsAccess bool `json:"access"`
 }
 
-func NewProvider(cfg *config.JWT, log *zap.Logger) (*Provider, error) {
-	privateKeyRaw, err := os.ReadFile(cfg.PrivateKeyPath)
+func NewProvider(cfg *config.Config, log *zap.Logger) (*Provider, error) {
+	privateKeyRaw, err := os.ReadFile(cfg.JWT.PrivateKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading private key file")
 	}
@@ -35,7 +35,7 @@ func NewProvider(cfg *config.JWT, log *zap.Logger) (*Provider, error) {
 		return nil, fmt.Errorf("error while reading private key file")
 	}
 
-	publicKeyRaw, err := os.ReadFile(cfg.PublicKeyPath)
+	publicKeyRaw, err := os.ReadFile(cfg.JWT.PublicKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading public key file")
 	}
@@ -50,8 +50,8 @@ func NewProvider(cfg *config.JWT, log *zap.Logger) (*Provider, error) {
 	provider := &Provider{
 		publicKey:       publicKey,
 		privateKey:      privateKey,
-		accessLifetime:  cfg.AccessTokenLifetime,
-		refreshLifetime: cfg.RefreshTokenLifetime,
+		accessLifetime:  cfg.JWT.AccessTokenLifetime,
+		refreshLifetime: cfg.JWT.RefreshTokenLifetime,
 	}
 
 	return provider, nil

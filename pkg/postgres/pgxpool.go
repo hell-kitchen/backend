@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"github.com/hell-kitchen/backend/internal/config"
 	pgxzap "github.com/jackc/pgx-zap"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,11 +13,11 @@ import (
 )
 
 // New opens new postgres connection, configures it and return prepared client.
-func New(connString string, log *zap.Logger) (*pgxpool.Pool, error) {
+func New(cfg *config.Config, log *zap.Logger) (*pgxpool.Pool, error) {
 	var pool *pgxpool.Pool
 	log.Info("initializing postgres client")
 
-	c, err := pgxpool.ParseConfig(connString)
+	c, err := pgxpool.ParseConfig(cfg.Postgres.DNS)
 	if err != nil {
 		return nil, fmt.Errorf("error while parsing db uri: %w", err)
 	}
