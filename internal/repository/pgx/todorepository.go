@@ -34,7 +34,7 @@ func (t *todoRepository) migrate() error {
     "is_completed" BOOLEAN          NOT NULL DEFAULT FALSE,
     "created_by"   UUID REFERENCES users (id) ON DELETE CASCADE
 );
-CREATE INDEX todos_created_by_idx ON todos (created_by);`
+CREATE INDEX IF NOT EXISTS todos_created_by_idx ON todos (created_by);`
 	_, err := t.pool.Exec(context.Background(), query)
 	return err
 }

@@ -34,7 +34,7 @@ func (u *userRepository) migrate() error {
     username           VARCHAR          NOT NULL UNIQUE,
     encrypted_password VARCHAR          NOT NULL
 );
-CREATE UNIQUE INDEX users_username_idx ON users (username);`
+CREATE UNIQUE INDEX IF NOT EXISTS users_username_idx ON users (username);`
 	_, err := u.pool.Exec(context.Background(), query)
 	return err
 }
