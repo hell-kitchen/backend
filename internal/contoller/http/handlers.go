@@ -52,7 +52,7 @@ func (ctrl *Controller) HandleCreateTodo(c echo.Context) error {
 }
 
 func (ctrl *Controller) HandleRegister(c echo.Context) error {
-	var request model.UsersLoginRequest
+	var request model.UsersRegisterRequest
 	if err := c.Bind(&request); err != nil {
 		ctrl.log.Error("could not bind request", zap.Error(err))
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
@@ -78,17 +78,40 @@ func (ctrl *Controller) HandleRegister(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	response := model.UsersLoginResponse{
+	response := model.UsersRegisterResponse{
 		ID:           user.ID,
 		RefreshToken: refreshToken,
 		AccessToken:  accessToken,
 	}
 
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusCreated, response)
 }
 
 func (ctrl *Controller) HandleLogin(c echo.Context) error {
-	panic("not implemented")
+	var request model.UsersLoginRequest
+	if err := c.Bind(&request); err != nil {
+		ctrl.log.Error("could not bind request", zap.Error(err))
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+	}
+
+	user, err := ctrl.repo.User().GetByUsername(c.Request().Context(), request.Username)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, err.Error())
+	}
+
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		return c.JSON(http.StatusUnauthorized, err.Error())
+	}
+	access, refresh, err := ctrl.generateAccessAndRefreshForUser(user.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	response := &model.UsersLoginResponse{
+		ID:           user.ID,
+		AccessToken:  access,
+		RefreshToken: refresh,
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 func (ctrl *Controller) HandleGetMe(c echo.Context) error {

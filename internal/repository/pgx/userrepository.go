@@ -46,11 +46,29 @@ func (repo *userRepository) Create(ctx context.Context, user *model.UserDTO) err
 }
 
 func (repo *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.UserDTO, error) {
-	//TODO implement me
-	panic("implement me")
+	u := new(model.UserDTO)
+	const query = `SELECT u.id, u.username, u.encrypted_password
+FROM users AS u
+WHERE u.id = $1;`
+
+	err := repo.pool.QueryRow(ctx, query, id).Scan(&u.ID, &u.Username, &u.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
 
-func (repo *userRepository) GetByUsername(ctx context.Context, id uuid.UUID) (*model.UserDTO, error) {
-	//TODO implement me
-	panic("implement me")
+func (repo *userRepository) GetByUsername(ctx context.Context, username string) (*model.UserDTO, error) {
+	u := new(model.UserDTO)
+	const query = `SELECT u.id, u.username, u.encrypted_password
+FROM users AS u
+WHERE u.username = $1;`
+
+	err := repo.pool.QueryRow(ctx, query, username).Scan(&u.ID, &u.Username, &u.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }

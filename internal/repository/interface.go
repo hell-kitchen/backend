@@ -9,7 +9,7 @@ import (
 type UserRepository interface {
 	Create(ctx context.Context, user *model.UserDTO) error
 	GetByID(ctx context.Context, id uuid.UUID) (*model.UserDTO, error)
-	GetByUsername(ctx context.Context, id uuid.UUID) (*model.UserDTO, error)
+	GetByUsername(ctx context.Context, username string) (*model.UserDTO, error)
 }
 
 type TodosRepository interface {
