@@ -22,12 +22,18 @@ type Controller struct {
 	repo   repository.Interface
 }
 
-func New(log *zap.Logger, cfg *config.Controller, tokenProvider token.ProviderI) (*Controller, error) {
+func New(
+	log *zap.Logger,
+	cfg *config.Controller,
+	tokenProvider token.ProviderI,
+	repo repository.Interface,
+) (*Controller, error) {
 	ctrl := &Controller{
 		server: echo.New(),
 		log:    log,
 		cfg:    cfg,
 		token:  tokenProvider,
+		repo:   repo,
 	}
 
 	ctrl.configure()

@@ -12,6 +12,7 @@ import (
 type Config struct {
 	JWT        *JWT
 	Controller *Controller
+	Postgres   *PostgresConfig
 }
 
 func New(ctx context.Context) (*Config, error) {
@@ -29,6 +30,9 @@ func New(ctx context.Context) (*Config, error) {
 		Controller: &Controller{
 			BindAddress: "0.0.0.0",
 			BindPort:    8000,
+		},
+		Postgres: &PostgresConfig{
+			DNS: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable",
 		},
 	}
 	loader := confita.NewLoader(env.NewBackend(), flags.NewBackend())

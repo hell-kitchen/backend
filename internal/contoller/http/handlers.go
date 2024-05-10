@@ -43,6 +43,7 @@ func (ctrl *Controller) HandleCreateTodo(c echo.Context) error {
 	if err = ctrl.repo.Todos().Create(c.Request().Context(), todo); err != nil {
 		return err
 	}
+
 	return c.JSON(http.StatusCreated, todo)
 }
 
