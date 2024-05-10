@@ -16,21 +16,15 @@ func main() {
 	)
 	ctx = context.Background()
 
-	log, err = zap.NewProduction()
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		_ = log.Sync()
-	}()
+	log, _ = zap.NewProduction()
 
-	server, err = http.New()
+	server, err = http.New(log)
 	if err != nil {
-		panic(err)
+		log.Fatal("Failed to create server", zap.Error(err))
 	}
 	defer func() {
 		log.Error(
-			"stopped server",
+			"Stopping HTTP server",
 			zap.Error(server.OnStop(ctx)),
 		)
 	}()
