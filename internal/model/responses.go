@@ -13,3 +13,8 @@ type UsersLoginResponse struct {
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
 }
+
+type UsersGetMeResponse struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}

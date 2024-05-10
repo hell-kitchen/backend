@@ -14,7 +14,6 @@ type UserRepository interface {
 
 type TodosRepository interface {
 	Create(ctx context.Context, todo *model.TodoDTO) error
-	GetByID(ctx context.Context) (*model.TodoDTO, error)
 	GetAll(ctx context.Context) ([]model.TodoDTO, error)
 	GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.TodoDTO, error)
 }

@@ -14,11 +14,23 @@ func (ctrl *Controller) HandlePing(c echo.Context) error {
 }
 
 func (ctrl *Controller) HandleGetTodos(c echo.Context) error {
-	panic("not implemented")
-}
+	var (
+		result      []model.TodoDTO
+		err         error
+		getTodosErr error
+		user        uuid.UUID
+	)
+	user, err = ctrl.getUserIDFromAccessToken(c)
+	if err != nil {
+		result, getTodosErr = ctrl.repo.Todos().GetAll(c.Request().Context())
+	} else {
+		result, getTodosErr = ctrl.repo.Todos().GetAllByUserID(c.Request().Context(), user)
+	}
 
-func (ctrl *Controller) HandleGetTodoByID(c echo.Context) error {
-	panic("not implemented")
+	if getTodosErr != nil {
+		return c.JSON(http.StatusInternalServerError, getTodosErr.Error())
+	}
+	return c.JSON(http.StatusOK, result)
 }
 
 func (ctrl *Controller) HandleCreateTodo(c echo.Context) error {
@@ -115,5 +127,19 @@ func (ctrl *Controller) HandleLogin(c echo.Context) error {
 }
 
 func (ctrl *Controller) HandleGetMe(c echo.Context) error {
-	panic("not implemented")
+	requestUserID, err := ctrl.getUserIDFromAccessToken(c)
+	if err != nil {
+		ctrl.log.Error("could not validate access token from headers", zap.Error(err))
+		return err
+	}
+	ctrl.log.Info("logged in", zap.String("user_id", requestUserID.String()))
+
+	user, err := ctrl.repo.User().GetByID(c.Request().Context(), requestUserID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, err.Error())
+	}
+	return c.JSON(http.StatusOK, &model.UsersGetMeResponse{
+		ID:   user.ID,
+		Name: user.Username,
+	})
 }

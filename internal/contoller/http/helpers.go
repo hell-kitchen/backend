@@ -1,12 +1,12 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/hell-kitchen/backend/internal/model"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
-	"net/http"
 	"strings"
 )
 
@@ -50,10 +50,10 @@ func (ctrl *Controller) getUserDataFromRequest(c echo.Context) (*model.UserDataI
 func (ctrl *Controller) getUserIDFromAccessToken(c echo.Context) (uuid.UUID, error) {
 	userData, err := ctrl.getUserDataFromRequest(c)
 	if err != nil {
-		return uuid.Nil, c.JSON(http.StatusUnauthorized, "unauthorized")
+		return uuid.Nil, errors.New("unauthorized")
 	}
 	if !userData.IsAccess {
-		return uuid.Nil, c.JSON(http.StatusUnauthorized, "unauthorized")
+		return uuid.Nil, errors.New("unauthorized")
 	}
 	return userData.ID, nil
 }

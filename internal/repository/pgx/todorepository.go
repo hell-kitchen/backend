@@ -50,14 +50,42 @@ func (repo *todoRepository) GetByID(ctx context.Context) (*model.TodoDTO, error)
 	panic("implement me")
 }
 
+func (repo *todoRepository) getAllByQuery(ctx context.Context, query string, args ...any) ([]model.TodoDTO, error) {
+	var res []model.TodoDTO
+	rows, err := repo.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var temp model.TodoDTO
+
+		err = rows.Scan(&temp.ID, &temp.Name, &temp.Description, &temp.IsCompleted, &temp.CreatedBy)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, temp)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (repo *todoRepository) GetAll(ctx context.Context) ([]model.TodoDTO, error) {
-	//TODO implement me
-	panic("implement me")
+	const query = `SELECT t.id, t.name, t.description, t.is_completed, t.created_by
+FROM todos t;`
+	return repo.getAllByQuery(ctx, query)
 }
 
 func (repo *todoRepository) GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.TodoDTO, error) {
-	//TODO implement me
-	panic("implement me")
+	const query = `SELECT t.id, t.name, t.description, t.is_completed, t.created_by
+FROM todos t
+WHERE t.created_by = $1;`
+	return repo.getAllByQuery(ctx, query, userID)
 }
 
 var _ repository.TodosRepository = (*todoRepository)(nil)
