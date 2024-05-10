@@ -29,6 +29,23 @@ func New(log *zap.Logger) (*Controller, error) {
 
 func (ctrl *Controller) configureRoutes() {
 	ctrl.server.GET("/ping", ctrl.HandlePing)
+
+	api := ctrl.server.Group("/api")
+	{
+		users := api.Group("/users")
+		{
+			users.POST("/register", ctrl.HandleRegister)
+			users.POST("/login", ctrl.HandleLogin)
+			users.GET("/me", ctrl.HandleGetMe)
+		}
+		todos := api.Group("/todos")
+		{
+			todos.GET("/", ctrl.HandleGetTodos)
+			todos.GET("", ctrl.HandleGetTodos)
+			todos.POST("/", ctrl.HandleCreateTodo)
+			todos.POST("", ctrl.HandleCreateTodo)
+		}
+	}
 }
 
 func (ctrl *Controller) configureMiddlewares() {
