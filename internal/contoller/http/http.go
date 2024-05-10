@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hell-kitchen/backend/internal/config"
 	"github.com/hell-kitchen/backend/internal/contoller"
+	"github.com/hell-kitchen/backend/internal/pkg/token"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
@@ -13,16 +14,18 @@ import (
 var _ contoller.Controller = (*Controller)(nil)
 
 type Controller struct {
-	server *echo.Echo
-	log    *zap.Logger
-	cfg    *config.Controller
+	server        *echo.Echo
+	log           *zap.Logger
+	cfg           *config.Controller
+	tokenProvider token.ProviderI
 }
 
-func New(log *zap.Logger, cfg *config.Controller) (*Controller, error) {
+func New(log *zap.Logger, cfg *config.Controller, tokenProvider token.ProviderI) (*Controller, error) {
 	ctrl := &Controller{
-		server: echo.New(),
-		log:    log,
-		cfg:    cfg,
+		server:        echo.New(),
+		log:           log,
+		cfg:           cfg,
+		tokenProvider: tokenProvider,
 	}
 
 	ctrl.configure()

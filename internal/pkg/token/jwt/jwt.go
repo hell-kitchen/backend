@@ -6,6 +6,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/hell-kitchen/backend/internal/config"
+	"github.com/hell-kitchen/backend/internal/model"
 	"go.uber.org/zap"
 	"os"
 	"time"
@@ -16,6 +17,11 @@ type Provider struct {
 	privateKey      *rsa.PrivateKey
 	accessLifetime  int
 	refreshLifetime int
+}
+
+type CustomClaims struct {
+	jwt.StandardClaims
+	IsAccess bool `json:"access"`
 }
 
 func NewProvider(cfg *config.JWT, log *zap.Logger) (*Provider, error) {
@@ -53,26 +59,39 @@ func NewProvider(cfg *config.JWT, log *zap.Logger) (*Provider, error) {
 
 func (provider *Provider) readKeyFunc(token *jwt.Token) (interface{}, error) {
 	if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-		return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 	}
 
 	return provider.publicKey, nil
 }
 
-func (provider *Provider) GetDataFromToken(token string) (uuid.UUID, error) {
-	parsed, err := jwt.ParseWithClaims(token, &jwt.StandardClaims{}, provider.readKeyFunc)
+func (provider *Provider) GetDataFromToken(token string) (*model.UserDataInToken, error) {
+	parsed, err := jwt.ParseWithClaims(token, &CustomClaims{}, provider.readKeyFunc)
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
 
 	if !parsed.Valid {
-		return uuid.Nil, fmt.Errorf("invalid token: not valid")
+		return nil, fmt.Errorf("invalid token: not valid")
 	}
 
-	if claims, ok := parsed.Claims.(*jwt.StandardClaims); ok {
-		return uuid.Parse(claims.Issuer)
+	claims, ok := parsed.Claims.(*CustomClaims)
+	if !ok {
+		return nil, fmt.Errorf("invalid token: cannot parse claims")
 	}
-	return uuid.Nil, fmt.Errorf("invalid token: cannot parse claims")
+
+	var parsedID uuid.UUID
+
+	parsedID, err = uuid.Parse(claims.Issuer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UserDataInToken{
+		ID:       parsedID,
+		IsAccess: claims.IsAccess,
+	}, nil
+
 }
 
 func (provider *Provider) CreateTokenForUser(userID uuid.UUID, isAccess bool) (string, error) {
@@ -85,11 +104,14 @@ func (provider *Provider) CreateTokenForUser(userID uuid.UUID, isAccess bool) (s
 		add = time.Duration(provider.refreshLifetime) * time.Minute
 	}
 
-	claims := &jwt.StandardClaims{
-		Issuer:    userID.String(),
-		IssuedAt:  now.Unix(),
-		NotBefore: now.Unix(),
-		ExpiresAt: now.Add(add).Unix(),
+	claims := &CustomClaims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    userID.String(),
+			IssuedAt:  now.Unix(),
+			NotBefore: now.Unix(),
+			ExpiresAt: now.Add(add).Unix(),
+		},
+		IsAccess: isAccess,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	return token.SignedString(provider.privateKey)

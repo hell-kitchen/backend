@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/hell-kitchen/backend/internal/config"
 	"github.com/hell-kitchen/backend/internal/contoller"
 	"github.com/hell-kitchen/backend/internal/contoller/http"
-	"github.com/hell-kitchen/backend/internal/pkg/jwt"
+	"github.com/hell-kitchen/backend/internal/pkg/token/jwt"
 	"go.uber.org/zap"
-	"time"
 )
 
 func main() {
@@ -34,16 +32,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to create jwt provider", zap.Error(err))
 	}
-	id, err := uuid.NewUUID()
-	if err == nil {
-		got, err := provider.CreateTokenForUser(id, false)
-		log.Info("generated token", zap.String("token", got), zap.Error(err))
-		time.Sleep(100 * time.Millisecond)
-		parsed, err := provider.GetDataFromToken(got)
-		log.Info("parsed from token", zap.String("token", parsed.String()), zap.Error(err))
-	}
 
-	server, err = http.New(log, cfg.Controller)
+	server, err = http.New(log, cfg.Controller, provider)
 	if err != nil {
 		log.Fatal("Failed to create server", zap.Error(err))
 	}
