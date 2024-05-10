@@ -22,7 +22,28 @@ func (ctrl *Controller) HandleGetTodoByID(c echo.Context) error {
 }
 
 func (ctrl *Controller) HandleCreateTodo(c echo.Context) error {
-	panic("not implemented")
+	user, err := ctrl.getUserIDFromAccessToken(c)
+	if err != nil {
+		return err
+	}
+
+	var request model.TodoCreateRequest
+	if err := c.Bind(&request); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+	}
+
+	todo := &model.TodoDTO{
+		ID:          uuid.New(),
+		Name:        request.Name,
+		Description: request.Description,
+		IsCompleted: false,
+		CreatedBy:   user,
+	}
+
+	if err = ctrl.repo.Todos().Create(c.Request().Context(), todo); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusCreated, todo)
 }
 
 func (ctrl *Controller) HandleRegister(c echo.Context) error {

@@ -9,9 +9,9 @@ type UserDTO struct {
 }
 
 type TodoDTO struct {
-	ID          uuid.UUID
-	Name        string
-	Description string
-	IsCompleted bool
-	CreatedBy   uuid.UUID
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	IsCompleted bool      `json:"is_completed"`
+	CreatedBy   uuid.UUID `json:"created_by"`
 }

@@ -37,3 +37,14 @@ func (ctrl *Controller) getUserDataFromRequest(c echo.Context) (*model.UserDataI
 	}
 	return userData, nil
 }
+
+func (ctrl *Controller) getUserIDFromAccessToken(c echo.Context) (uuid.UUID, error) {
+	userData, err := ctrl.getUserDataFromRequest(c)
+	if err != nil {
+		return uuid.Nil, c.JSON(http.StatusUnauthorized, "unauthorized")
+	}
+	if !userData.IsAccess {
+		return uuid.Nil, c.JSON(http.StatusUnauthorized, "unauthorized")
+	}
+	return userData.ID, nil
+}
