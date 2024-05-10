@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/hell-kitchen/backend/internal/config"
 	"github.com/hell-kitchen/backend/internal/contoller"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -14,12 +15,14 @@ var _ contoller.Controller = (*Controller)(nil)
 type Controller struct {
 	server *echo.Echo
 	log    *zap.Logger
+	cfg    *config.Controller
 }
 
-func New(log *zap.Logger) (*Controller, error) {
+func New(log *zap.Logger, cfg *config.Controller) (*Controller, error) {
 	ctrl := &Controller{
 		server: echo.New(),
 		log:    log,
+		cfg:    cfg,
 	}
 
 	ctrl.configure()
@@ -69,13 +72,14 @@ func (ctrl *Controller) configureMiddlewares() {
 }
 
 func (ctrl *Controller) configure() {
+	ctrl.server.HideBanner = true
 	ctrl.configureMiddlewares()
 	ctrl.configureRoutes()
 }
 
 func (ctrl *Controller) OnStart(_ context.Context) error {
-	ctrl.log.Info("starting HTTP server on port :8080")
-	return ctrl.server.Start(":8080")
+	ctrl.log.Info("starting HTTP server", zap.String("bind-address", ctrl.cfg.GetBindAddress()))
+	return ctrl.server.Start(ctrl.cfg.GetBindAddress())
 }
 
 func (ctrl *Controller) OnStop(ctx context.Context) error {
