@@ -20,7 +20,7 @@ func (ctrl *Controller) generateAccessAndRefreshForUser(user uuid.UUID) (access 
 	return
 }
 
-func (ctrl *Controller) getUserIDFromRequest(c echo.Context) (uuid.UUID, error) {
+func (ctrl *Controller) getUserDataFromRequest(c echo.Context) (*model.UserDataInToken, error) {
 	var (
 		cookie   *http.Cookie
 		err      error
@@ -28,12 +28,12 @@ func (ctrl *Controller) getUserIDFromRequest(c echo.Context) (uuid.UUID, error) 
 	)
 	cookie, err = c.Cookie(ctrl.cfg.AccessCookieName)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("error while getting access cookie: %w", err)
+		return nil, fmt.Errorf("error while getting access cookie: %w", err)
 	}
 
 	userData, err = ctrl.token.GetDataFromToken(cookie.Value)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("error while getting access token: %w", err)
+		return nil, fmt.Errorf("error while getting access token: %w", err)
 	}
-	return userData.ID, nil
+	return userData, nil
 }
