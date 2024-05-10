@@ -25,7 +25,7 @@ func newTodoRepository(pool *pgxpool.Pool, log *zap.Logger) (*todoRepository, er
 	return repo, nil
 }
 
-func (t *todoRepository) migrate() error {
+func (repo *todoRepository) migrate() error {
 	query := `CREATE TABLE IF NOT EXISTS todos
 (
     "id"           UUID PRIMARY KEY NOT NULL UNIQUE,
@@ -35,26 +35,26 @@ func (t *todoRepository) migrate() error {
     "created_by"   UUID REFERENCES users (id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS todos_created_by_idx ON todos (created_by);`
-	_, err := t.pool.Exec(context.Background(), query)
+	_, err := repo.pool.Exec(context.Background(), query)
 	return err
 }
 
-func (t *todoRepository) Create(ctx context.Context, todo *model.TodoDTO) error {
+func (repo *todoRepository) Create(ctx context.Context, todo *model.TodoDTO) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *todoRepository) GetByID(ctx context.Context) (*model.TodoDTO, error) {
+func (repo *todoRepository) GetByID(ctx context.Context) (*model.TodoDTO, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *todoRepository) GetAll(ctx context.Context) ([]model.TodoDTO, error) {
+func (repo *todoRepository) GetAll(ctx context.Context) ([]model.TodoDTO, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (t *todoRepository) GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.TodoDTO, error) {
+func (repo *todoRepository) GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.TodoDTO, error) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -27,7 +27,7 @@ func newUserRepository(pool *pgxpool.Pool, log *zap.Logger) (*userRepository, er
 	return repo, nil
 }
 
-func (u *userRepository) migrate() error {
+func (repo *userRepository) migrate() error {
 	query := `CREATE TABLE IF NOT EXISTS users
 (
     id                 UUID PRIMARY KEY NOT NULL UNIQUE,
@@ -35,21 +35,22 @@ func (u *userRepository) migrate() error {
     encrypted_password VARCHAR          NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_username_idx ON users (username);`
-	_, err := u.pool.Exec(context.Background(), query)
+	_, err := repo.pool.Exec(context.Background(), query)
 	return err
 }
 
-func (u *userRepository) Create(ctx context.Context, user *model.UserDTO) error {
+func (repo *userRepository) Create(ctx context.Context, user *model.UserDTO) error {
+	const query = `INSERT INTO users (id, username, encrypted_password) VALUES ($1, $2, $3);`
+	_, err := repo.pool.Exec(ctx, query, user.ID, user.Username, user.Password)
+	return err
+}
+
+func (repo *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.UserDTO, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.UserDTO, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u *userRepository) GetByUsername(ctx context.Context, id uuid.UUID) (*model.UserDTO, error) {
+func (repo *userRepository) GetByUsername(ctx context.Context, id uuid.UUID) (*model.UserDTO, error) {
 	//TODO implement me
 	panic("implement me")
 }
