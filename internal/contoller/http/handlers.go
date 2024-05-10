@@ -42,11 +42,7 @@ func (ctrl *Controller) HandleRegister(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 
-	accessToken, err := ctrl.token.CreateTokenForUser(user.ID, true)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
-	}
-	refreshToken, err := ctrl.token.CreateTokenForUser(user.ID, false)
+	accessToken, refreshToken, err := ctrl.generateAccessAndRefreshForUser(user.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
