@@ -4,9 +4,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/hell-kitchen/backend/internal/model"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
-	"time"
 )
 
 func (ctrl *Controller) HandlePing(c echo.Context) error {
@@ -24,8 +24,10 @@ func (ctrl *Controller) HandleGetTodoByID(c echo.Context) error {
 func (ctrl *Controller) HandleCreateTodo(c echo.Context) error {
 	user, err := ctrl.getUserIDFromAccessToken(c)
 	if err != nil {
+		ctrl.log.Error("could not validate access token from headers", zap.Error(err))
 		return err
 	}
+	ctrl.log.Info("logged in", zap.String("user_id", user.String()))
 
 	var request model.TodoCreateRequest
 	if err := c.Bind(&request); err != nil {
@@ -41,8 +43,10 @@ func (ctrl *Controller) HandleCreateTodo(c echo.Context) error {
 	}
 
 	if err = ctrl.repo.Todos().Create(c.Request().Context(), todo); err != nil {
+		ctrl.log.Error("error while creation todo", zap.Error(err))
 		return err
 	}
+	ctrl.log.Info("successfully created todo", zap.Any("todo", todo))
 
 	return c.JSON(http.StatusCreated, todo)
 }
@@ -50,6 +54,7 @@ func (ctrl *Controller) HandleCreateTodo(c echo.Context) error {
 func (ctrl *Controller) HandleRegister(c echo.Context) error {
 	var request model.UsersLoginRequest
 	if err := c.Bind(&request); err != nil {
+		ctrl.log.Error("could not bind request", zap.Error(err))
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 
@@ -59,27 +64,24 @@ func (ctrl *Controller) HandleRegister(c echo.Context) error {
 		Username: request.Username,
 		Password: string(generated),
 	}
+	ctrl.log.Info("got user", zap.Any("user", user))
 
 	if err = ctrl.repo.User().Create(c.Request().Context(), user); err != nil {
+		ctrl.log.Error("got error while creating user", zap.Error(err))
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
+	ctrl.log.Info("successfully created user")
 
 	accessToken, refreshToken, err := ctrl.generateAccessAndRefreshForUser(user.ID)
 	if err != nil {
+		ctrl.log.Error("error while creating tokens", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
-
-	cookie := &http.Cookie{
-		Name:    ctrl.cfg.AccessCookieName,
-		Value:   accessToken,
-		Expires: time.Now().Add(time.Duration(ctrl.cfg.AccessCookieLifetime) * time.Minute),
-	}
-
-	c.SetCookie(cookie)
 
 	response := model.UsersLoginResponse{
 		ID:           user.ID,
 		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
 	}
 
 	return c.JSON(http.StatusOK, response)

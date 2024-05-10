@@ -5,7 +5,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/hell-kitchen/backend/internal/model"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 	"net/http"
+	"strings"
 )
 
 func (ctrl *Controller) generateAccessAndRefreshForUser(user uuid.UUID) (access string, refresh string, err error) {
@@ -22,16 +24,23 @@ func (ctrl *Controller) generateAccessAndRefreshForUser(user uuid.UUID) (access 
 
 func (ctrl *Controller) getUserDataFromRequest(c echo.Context) (*model.UserDataInToken, error) {
 	var (
-		cookie   *http.Cookie
+		data     []string
+		token    string
+		ok       bool
 		err      error
 		userData *model.UserDataInToken
 	)
-	cookie, err = c.Cookie(ctrl.cfg.AccessCookieName)
-	if err != nil {
-		return nil, fmt.Errorf("error while getting access cookie: %w", err)
+	data, ok = c.Request().Header["Authorization"]
+	if !ok {
+		return nil, fmt.Errorf("error while getting access token: %w", err)
 	}
+	ctrl.log.Info("got authorization header", zap.Any("header_data", data))
+	if len(data) == 0 {
+		return nil, fmt.Errorf("error while getting access token: %w", err)
+	}
+	token = strings.Split(data[0], " ")[1]
 
-	userData, err = ctrl.token.GetDataFromToken(cookie.Value)
+	userData, err = ctrl.token.GetDataFromToken(token)
 	if err != nil {
 		return nil, fmt.Errorf("error while getting access token: %w", err)
 	}

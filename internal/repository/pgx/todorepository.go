@@ -40,8 +40,9 @@ CREATE INDEX IF NOT EXISTS todos_created_by_idx ON todos (created_by);`
 }
 
 func (repo *todoRepository) Create(ctx context.Context, todo *model.TodoDTO) error {
-	//TODO implement me
-	panic("implement me")
+	const query = `INSERT INTO todos (id, name, description, created_by) VALUES ($1, $2, $3, $4);`
+	_, err := repo.pool.Exec(ctx, query, todo.ID, todo.Name, todo.Description, todo.CreatedBy)
+	return err
 }
 
 func (repo *todoRepository) GetByID(ctx context.Context) (*model.TodoDTO, error) {
